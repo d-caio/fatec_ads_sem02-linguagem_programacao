@@ -1,5 +1,7 @@
 package lote2.utils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 
 public abstract class ManipulacaoDeVetores {
@@ -75,6 +77,27 @@ public abstract class ManipulacaoDeVetores {
         Number[] maiorEMenor = {maior, menor};
 
         return maiorEMenor;
+    }
+
+    public List<Number> filtrarVetorParaLista(Predicate<Number> teste) {
+        List<Number> lista = new ArrayList<>();
+
+        for (Number num:this.vetor) {
+            if (teste.test(num))
+                lista.add(num);
+        }
+
+        return lista;
+    }
+
+    public List<Number> determinarPosicoesNoVetor(Predicate<Number> teste) {
+        List<Number> posicoes = new ArrayList<>();
+        
+        for (int i = 0; i < this.vetor.length; i++)
+            if (teste.test(this.vetor[i]))
+                posicoes.add(i);
+
+        return posicoes;
     }
 
     public String vetorString() {

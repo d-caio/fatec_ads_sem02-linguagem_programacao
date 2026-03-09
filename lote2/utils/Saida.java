@@ -18,6 +18,22 @@ public class Saida {
     public static String vetorNumberFormatadoParaString(Number[] vetor) {
         return Arrays.stream(vetor).map(num -> formatadorBr(num.doubleValue())).collect(Collectors.joining(", ", "[ ", " ]"));
     }
+
+    public static String listaNumberFormatadaParaString(List<Number> lista) {
+        StringBuilder stringLista = new StringBuilder("[ ");
+
+        for (int i = 0; i < lista.size(); i++) {
+            stringLista.append(formatadorBr(lista.get(i)));
+            
+            if (i + 1 == lista.size())
+                stringLista.append(" ]");
+
+            else
+                stringLista.append(", ");
+        }
+
+        return stringLista.toString();
+    }
     
     public static void ImprimirNoTerminal(String msgOriginal, Double... nums) {
         String[] numsFormatados = new String[nums.length];
