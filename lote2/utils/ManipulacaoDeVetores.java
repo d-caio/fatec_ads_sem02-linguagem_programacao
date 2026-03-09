@@ -39,6 +39,23 @@ public abstract class ManipulacaoDeVetores {
         return ((numDeItens == 0) ? (0.0) : (soma / numDeItens));
     }
 
+    public Number[] EncontrarMaiorEMenor() {
+        Number maior = this.vetor[0];
+        Number menor = this.vetor[0];
+
+        for (Number num:vetor) {
+            if (num.doubleValue() > maior.doubleValue())
+                maior = num;
+
+            if (num.doubleValue() < menor.doubleValue())
+                menor = num;
+        }
+        
+        Number[] maiorEMenor = {maior, menor};
+
+        return maiorEMenor;
+    }
+
     public String vetorString() {
         return Saida.vetorNumberFormatadoParaString(vetor);
     }

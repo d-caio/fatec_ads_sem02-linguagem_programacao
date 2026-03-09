@@ -8,27 +8,23 @@ DATA: 08/03/2026
 
 package lote2;
 
-import java.util.Arrays;
-
-import lote2.utils.*;
+import lote2.utils.ManipulacaoDeVetoresInteger;
+import lote2.utils.Saida;
 
 public class Lote2Ex02Vet {
-    private static final int TAMANHO_VETOR = 100;
-    private static final int VLR_MAX_VETOR = 1000;
-    
-    public static int[] vetor = new int[TAMANHO_VETOR];
-    public static int maior, menor;
-    public static double media;
-    public static String msgResultado = "Dado o vetor %s%nO maior valor é %d%nO menor valor é %d%nA média dos valores é %.2f";
+    private static final int TAMANHO_DO_VETOR = 100;
+    private static final int VALOR_MIN_DOS_ITENS_DO_VETOR = 0;
+    private static final int VALOR_MAX_DOS_ITENS_DO_VETOR = 2000;
 
     public static void main(String[] args) {
-        vetor = VetorMatriz.coletarVetor(TAMANHO_VETOR, VLR_MAX_VETOR);
-        maior = Calculos.maiorMenor(vetor)[0];
-        menor = Calculos.maiorMenor(vetor)[1];
-        media = Calculos.media(vetor);
+        var vetor = new ManipulacaoDeVetoresInteger(TAMANHO_DO_VETOR, VALOR_MIN_DOS_ITENS_DO_VETOR, VALOR_MAX_DOS_ITENS_DO_VETOR);
 
-        String msgRsultadoFormatada = String.format(msgResultado, Arrays.toString(vetor), maior, menor, media);
+        Number[] maiorEMenor = vetor.EncontrarMaiorEMenor();
 
-        System.out.println(msgRsultadoFormatada);
+        double media = vetor.media();
+
+        String msg = "Vetor: " + vetor.vetorString() + "%n%nMaior: %s%n%nMenor: %s%n%nMédia: %s";
+
+        Saida.ImprimirNoTerminal(msg, maiorEMenor[0].doubleValue(), maiorEMenor[1].doubleValue(), media);
     }
 }
