@@ -23,13 +23,7 @@ public class Lote1Ex32ModFunc {
 
             resultado = fatorial(num);
 
-            StringBuilder msg = new StringBuilder("");
-
-            for (int i = num; i > 0; i--)
-                if (i - 1 == 0)
-                    msg.append(i + " = " + resultado);
-                else
-                    msg.append(i + "x");
+            String msg = msgFatorial(num, resultado, num + "! = ");
 
             JOptionPane.showMessageDialog(null, msg, "Resultado", JOptionPane.INFORMATION_MESSAGE);
             
@@ -57,5 +51,26 @@ public class Lote1Ex32ModFunc {
         resultado = num * fatorial(num - 1);
 
         return resultado;
+    }
+
+    private static String msgFatorial(int num, int resultado, String msg) {
+        StringBuilder msgBuilder = new StringBuilder(msg);
+        String msgFinal;
+
+        if (num < 0)
+            throw new IllegalArgumentException("O número deve ser 0 ou positivo.");
+
+        if (num == 0)
+            return "0! = 1";
+
+        if (num == 1) {
+            msgBuilder.append(num + " = " + resultado);
+            msgFinal = msgBuilder.toString();
+            return msgFinal;
+        }
+
+        msgBuilder.append(num + "x");
+        msgFinal = msgBuilder.toString();
+        return msgFatorial(num - 1, resultado, msgFinal);
     }
 }
