@@ -1,169 +1,154 @@
+package lotes.caixa_eletronico;
+
 import java.math.BigDecimal;
 
-import menus.*;
-import caixa.*;
-import exceptions.NotasNaoCarregadasException;
-import exceptions.ValorExcedidoException;
-import inputs_outputs.InputsEOutputs;
+import lotes.caixa_eletronico.telas.*;
+import lotes.caixa_eletronico.caixa.Caixa;
+import lotes.caixa_eletronico.exceptions.*;
 
 public class Main {
     private static final int MAXIMO_DE_TENTATIVAS = 5;
     private static int tentativas = 0;
-    
-    private static final String templateDoTituloDaMensagemDeErro = "Erro %d de %d";
-    private static String tituloDaMensagemDeErro;
-    
+
     public static void main(String[] args) {
-        int opcao;
-        
-        var caixa = new Caixa();
-
-        Opcao[] opcoesDoMenuPrincipal = new Opcao[] {new Opcao(1, "Carregar notas"), new Opcao(2, "Retirar notas"), new Opcao(3, "Estatísticas"), new Opcao(9, "Fim")};
-
-        var menuPrincipal = new MenuDeOpcoes(
-            "Menu Principal",
-            opcoesDoMenuPrincipal
-        );
-
         try {
-            while (true) {    
-                try {
-                    opcao = menuPrincipal.selecionarOpcao();
+            var caixa = new Caixa(
+                "Banco do Brasil",
+                "Caixa Econômica Federal",
+                "Bradesco",
+                "Itaú"
+            );
 
-                    tentativas = 0;
+            var menuPrincipal = new Menu(
+                "Menu Principal",
+                "Carregar notas",
+                "Sacar",
+                "Estatísticas",
+                "Fim"
+            );
 
-                    if (opcao == 9) {
-                        InputsEOutputs.mostrarMensagemDeSucesso(
-                            "Fim",
-                            "Obrigado!"
+            int opcaoDoMenuPrincipal;
+
+            while (true) {
+                opcaoDoMenuPrincipal = menuPrincipal.selecionarOpcao();
+
+                if (opcaoDoMenuPrincipal == 0) {
+                    var telaDeFim = new TelaDeVisualizacao(
+                        "Fim",
+                        "Obrigado!"
+                    );
+
+                    telaDeFim.mostrar();
+
+                    return;
+                } else if (opcaoDoMenuPrincipal == 1) {
+                    caixa.carregarNotas();
+
+                    String relatorioDeValoresDisponiveis = caixa.relatorioDeValoresDisponiveis();
+
+                    var telaDeNotasCarregadas = new TelaDeVisualizacao(
+                        "Notas Carregadas",
+                        relatorioDeValoresDisponiveis
+                    );
+
+                    telaDeNotasCarregadas.mostrar();
+
+                } else if (opcaoDoMenuPrincipal == 2) {
+                    try {
+                        String[] bancos = caixa.iniciarSaque();
+
+                        tentativas = 0;
+
+                        var menuDeBancos = new Menu(
+                            "Bancos Disponíveis",
+                            bancos
                         );
 
-                        return;
+                        int opcaoDoMenuDeBancos = menuDeBancos.selecionarOpcao();
 
-                    } else if (opcao == 1) {
-                        caixa.carregarNotas();
+                        if (opcaoDoMenuDeBancos == 0)
+                            continue;
 
-                        var menuDeNotasDisponiveis = new MenuDeInformacoes(
-                            "Valores Disponíveis",
-                            caixa.relatorioDeNotasDisponiveis()
-                        );
-
-                        InputsEOutputs.mostrarMensagemDeSucesso(
-                            menuDeNotasDisponiveis.getTitulo(),
-                            menuDeNotasDisponiveis.getTexto()
-                        );
-                    } else if (opcao == 2) {
-                        int banco;
-
-                        Banco[] bancos = caixa.getBancos();
+                        String relatorioDeValoresDisponiveis = caixa.relatorioDeValoresDisponiveis();
                         
-                        Opcao[] opcoesDoMenuDeBancos = new Opcao[bancos.length + 1];
-
-                        for (int i = 0; i < bancos.length; i++) {
-                            opcoesDoMenuDeBancos[i] = new Opcao(
-                                bancos[i].getCodigo(),
-                                bancos[i].getNome()
-                            );
-                        }
-
-                        opcoesDoMenuDeBancos[bancos.length] = new Opcao(9, "Voltar");
-                        
-                        var menuDeBancos = new MenuDeOpcoes(
-                            "Bancos Disponíveis para Saque",
-                            opcoesDoMenuDeBancos
+                        var telaDeEntradaDeValorDoSaque = new TelaDeEntrada(
+                            "Saque",
+                            relatorioDeValoresDisponiveis + "\n\nInforme o valor desejado"
                         );
+
+                        BigDecimal valorDoSaque;
                         
                         while (true) {
                             try {
-                                banco = menuDeBancos.selecionarOpcao();
+                                valorDoSaque = telaDeEntradaDeValorDoSaque.solicitarEntrada();
+
+                                caixa.sacar(valorDoSaque, opcaoDoMenuDeBancos);
 
                                 tentativas = 0;
 
                                 break;
+                                
                             } catch (NumberFormatException e) {
-                                tratamentoDeExcecoesInternas(
-                                    "A opção selecionada deve ser um número inteiro de acordo com os códigos válidos."
-                                );
+                                tratarExcecoesInternas("O valor deve ser monetário e inteiro, sem separação por centavos.");
+
+                            } catch (ValorDeSaqueInvalidoException e) {
+                                tratarExcecoesInternas(e.getMessage());
+
                             } catch (IllegalArgumentException e) {
-                                tratamentoDeExcecoesInternas(e.getMessage());
+                                tratarExcecoesInternas(e.getMessage());
                             }
                         }
 
-                        if (banco != 9) {
-                            BigDecimal valorDeSaque;
+                        String relatorioDeSaque = caixa.relatorioDeSaque();
 
-                            var menuDeValorDeSaque = new MenuDeEscrita(
-                                "Valor de Saque",
-                                "Informe o valor que deseja sacar.\n\n" + caixa.relatorioDeNotasDisponiveis()
-                            );
-                            
-                            while (true) {
-                                try {
-                                    valorDeSaque = menuDeValorDeSaque.informarValor();
+                        var telaDeSaque = new TelaDeVisualizacao(
+                            "Saque Realizado com Sucesso",
+                            relatorioDeSaque
+                        );
 
-                                    tentativas = 0;
+                        telaDeSaque.mostrar();
+                        
+                    } catch (CaixaNaoCarregadoException e) {
+                        tratarExcecoesInternas(e.getMessage());
 
-                                    break;
-
-                                } catch (NumberFormatException e) {
-                                    tratamentoDeExcecoesInternas("Por favor, informe apenas valores numéricos, com decimais separados por ponto.");
-                                    
-                                }
-                            }
-
-                            try {
-                                caixa.sacar(valorDeSaque, banco);
-
-                                var menuDeValorSacado = new MenuDeInformacoes(
-                                    "Valor Sacado",
-                                    "Saque de " + caixa.getValorDoUltimoSaque() + " realizado com sucesso.\n\n" + caixa.relatorioDeNotasDisponiveis()    
-                                );
-
-                                menuDeValorSacado.mostrarInformacoes();
-
-                            } catch (NotasNaoCarregadasException | ValorExcedidoException e) {
-                                InputsEOutputs.mostrarMensagemDeErro(
-                                    "Erro",
-                                    e.getMessage()
-                                );
-                            }
-                        }
+                    } catch (LimiteDeSaquesAlcancadoException e) {
+                        tratarExcecoesInternas(e.getMessage());
+                        
+                    } catch (ValorDeSaqueInvalidoException e) {
+                        tratarExcecoesInternas(e.getMessage());
+                        
                     }
-                    
-                } catch (NumberFormatException e) {
-                    tratamentoDeExcecoesInternas("A opção selecionada deve ser um número inteiro de acordo com os códigos válidos.");
+                } else {
+                    String estatisticas = caixa.estatisticasCompletas();
 
-                } catch (IllegalArgumentException e) {
-                    tratamentoDeExcecoesInternas(e.getMessage());
+                    var telaDeEstatisticas = new TelaDeVisualizacao(
+                        "Estatísticas",
+                        estatisticas
+                    );
 
+                    telaDeEstatisticas.mostrar();
                 }
+
             }
+            
+        } catch (JanelaFechadaException e) {
+            TelaDeException.programaEncerradoPeloUsuario();
 
-        } catch (NullPointerException e) {
-            InputsEOutputs.mostrarMensagemDeAtencao("Fim", e.getMessage());
-
-        } catch (IllegalStateException e) {
-            InputsEOutputs.mostrarMensagemDeErro(tituloDaMensagemDeErro, e.getMessage());
-
+        } catch (TentativasExcedidasException e) {
+            TelaDeException.telaDeErro(tentativas, MAXIMO_DE_TENTATIVAS, e.getMessage());
         }
     }
 
-    private static void atualizarTituloDaMensagemDeErro() {
-        tituloDaMensagemDeErro = String.format(templateDoTituloDaMensagemDeErro, tentativas, MAXIMO_DE_TENTATIVAS);
-    }
-
-    private static void verificarLimiteDeTentativas() {
-        if (tentativas == MAXIMO_DE_TENTATIVAS)
-            throw new IllegalStateException("Máximo de tentativas atingido. O programa será encerrado.");
-    }
-
-    private static void tratamentoDeExcecoesInternas(String mensagem) {
+    private static void tratarExcecoesInternas(String texto) {
         tentativas++;
-                    
-        atualizarTituloDaMensagemDeErro();
-                    
-        verificarLimiteDeTentativas();
-                    
-        InputsEOutputs.mostrarMensagemDeErro(tituloDaMensagemDeErro, mensagem);
+
+        if (tentativas == MAXIMO_DE_TENTATIVAS)
+            throw new TentativasExcedidasException();
+
+        TelaDeException.telaDeErro(
+            tentativas,
+            MAXIMO_DE_TENTATIVAS,
+            texto
+        );
     }
 }
